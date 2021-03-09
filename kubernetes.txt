@@ -1,0 +1,72 @@
+:: Kubernetes
+
+::Introduction:
+	Every Kubernetes Node runs at least:
+		Kubelet, a process responsible for communication between the Kubernetes Master and the Node; it manages the Pods and the containers running on a machine.
+		A container runtime (like Docker) responsible for pulling the container image from a registry, unpacking the container, and running the application.
+
+
+:: Installation:
+	::Add kubernetes signing key:
+		$ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add
+	
+	::Add software repositories:
+		$ sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+
+	:: install kubernetes:
+		$ sudo apt-get install kubeadm kubelet kubectl
+		$ sudo apt-mark hold kubeadm kubelet kubectl
+		$ kubeadm version
+		
+	Note: repeat above steps on each node.
+	
+	:: Begin deployment:
+		$ sudo swapoff –a
+			Start by disabling the swap memory on each server:
+			
+	:: Assign Unique Hostname for Each Server Node:
+		$ sudo hostnamectl set-hostname master-node
+		$ sudo hostnamectl set-hostname worker01
+		
+	:: Initialize Kubernetes on Master Node:
+		$ sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+		
+		Once this command finishes, it will display a kubeadm join message at the end. Make a note of the whole entry.
+		This will be used to join the worker nodes to the cluster.
+		Next follow this:
+			$ mkdir -p $HOME/.kube
+			$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+			$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+			
+	:: Deploy Pod Network to cluster (on Master node):
+		$ sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+		
+		Verify that everything is running and communicating: 
+		$ kubectl get pods --all-namespaces
+
+	:: Join Worker Node to Cluster(on Worker node):
+		Paste the statement that we copied earlier after running "kubeadm init" command on worker node.
+			$ kubeadm join 192.168.0.128:6443 --token 640c66.6h8vzabtfh1yh4ia --discovery-token-ca-cert-hash sha256:25b2433804e02c5f6df7784beee32cfa8591dbf557b3ad576792dae64b5e6436
+
+	:: Check for nodes(on Master node):
+		$ kubectl get nodes
+		
+:: Kubectl:
+	$ kubectl run hello-minikube
+	$ kubectl cluster-info
+	$ kubectl get nodes
+	
+:: Troubleshooting:
+	$ kubectl get 
+		to list resources
+	$ kubectl describe 
+		to show detailed information about a resource
+	$ kubectl logs 
+		to print the logs from a container in a pod
+	$ kubectl exec 
+		to execute a command on a container in a pod
+	
+	
+	
+::Reference: 
+https://phoenixnap.com/kb/install-kubernetes-on-ubuntu

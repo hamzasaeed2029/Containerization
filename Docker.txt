@@ -1,0 +1,391 @@
+:::::DOCKER:::::
+
+Download and Install:
+	$ curl -fsSL https://get.docker.com -o get-docker.sh
+	$ sudo sh get-docker.sh
+	
+Commands:
+::To see all containers running or not:
+	$ docker ps -a
+
+::To run an image:
+	$ docker run ubuntu
+		This will pull the docker image on the first go from docker hub repo.
+		This will run the instance of ubuntu and exits immediately i.e it is in exited state if u see docker ps -a because the containers are 
+		specified to run specific task/process and not to host OS. This ubuntu image will provide base image for other ubuntu processes
+
+	For example:
+		to host an instance of webserver/app server/DB/ or simple to carry some kind of computation task.
+		once the task is completed, the container exits.
+		If a service inside a container stops or crashed, container exits.
+		
+	::Executing a command when we run container:
+		$ docker run ubuntu sleep 5
+			when the container starts, it will run sleep commmand and goes into sleep command for 5 seconds.
+			Container exits after 5seconds.
+		
+	::Execute a command on a running container:
+		$ docker run ubuntu sleep 100
+		$ docker ps -a 
+			When we run docker ps -a command, we will see running container running.
+		$ docker exec <container_name> <command>
+			eg: docker exec <container_name> cat /etc/hosts
+		
+	::Run docker image on foreground/attached mode:
+		$ docker run ubuntu
+			Can't do anything else but to view the output of the container process until this docker container stops
+			it won't respond to input except ctrl+c
+		
+	::Run the docker container in the detached mode:
+		$ docker run -d /docker/whalesay sleep 30
+			this will run the docker in the background.
+		
+	::To attach back to the running container:
+		$ docker attach <container_id>
+			Note: Mention first few characters of container id till its uniqueness. 
+			View the output from background/detached mode
+		
+	::To run specific version of image:
+		$ docker run redis:4.0
+			This will run the redis 4.0 in docker
+			redis:4.0 is called as TAG, if not specified then it will run latest version.
+		
+	::To give input (interactive mode) in as stdin in terminal:
+		$ docker run -it kodekloud/simple-prompt-docker
+			-t stands for sudo terminal  -i means interactive terminal
+		
+::To host webapp and port map
+	$ docker run kodekloud/webapp
+		this will run web app on http://0.0.0.0:5000/
+
+	::To route traffic from one port to another:
+		$ docker run -p 80:5000 kodekloud/webapp
+			this will route port 80 traffic to port 5000
+		
+::To stop container:
+	$ docker stop <container_name>
+		run docker ps to check PID or container name
+	
+::To remove a stopped or exited container:
+	$ docker rm <container_name>
+		If prints the name back the we are confirmed
+		double check the removed container by checking docker ps
+
+::To see a list of images present on our host:
+	$ docker images
+	
+::To inspect container:
+	$ docker inspect <container name/id>
+		it returns details like state, monunts, config, date etc in JSON format
+		use only when you are required to find the details on a container
+	
+::To persist data:
+	$ docker run -v /opt/datadir:/var/lib/mysql mysql
+		When removing the container, the data inside the conatiner is lost. To persist the data, map a directory outside the container 
+		on the docker host to a directory inside the container as given above. Upon container deletion, data remains there.
+		In this way the docker mounts the external directory to a folder inside docker container. All data will be stored 
+		inside the volume at /opt/datadir 
+		
+		::Volume mounting:
+			$ docker volume create data_volume
+				after running this command, it will create a folder as:
+				 📁 /var/lib/docker
+	             ╚══ 📁 volumes
+					 ╚══ 📁 data_volume
+					 
+				Then mount the volume inside the container read/write layer as:
+					$ docker run -v data_volume:/var/lib/mysql mysql
+						only running above command will also create the volume if not created already.
+				
+		::Bind mounting:
+			$ docker run -v /data/mysql:/var/lib/mysql mysql 
+				here we can mount directory of  mysql folder in /data/ to the container other than volume present in /var/lib/docker 
+			or 		
+			$ docker run \
+				$ --mount type=bind,source=/data/mysql,target=/var/lib/mysql mysql
+					here type is bind
+						 source is location on my host 
+						 target is location on my container 
+						
+::To see the logs:
+	$ docker logs <container name/id>
+		Suppose we want to view standard output of container running in background.
+	
+:: To remove images:
+	$ docker rmi <image_name>
+		Make sure that no container is running on that image
+		Delete all dependent containers first to remove image
+	
+::To pull image:
+	$ docker pull <image_name>
+		This will pull the image and stores but not run the container
+
+::To rename image container:
+	$  docker run --name <name_u_want> <image name>
+		eg: docker run --name webapp nginx.1.14
+	
+::To set environment variables:
+	$ docker run -e ENV_VARIABLE=<value> <image_name>
+		suppose we have a python script app.python
+		there is a variable for to change background_color as " bg_color"
+		set variable as :
+			bg_color=os.environ.get('BG_COLOR')
+		so the command will be like this for this case:
+			docker run -e BG_COLOR=blue kodecloud/simple-webapp-color
+		
+	::To check environment variables:
+		$ docker inspect <container_name/id>
+			check under config->env heading
+		
+::To create your own image:
+	(tutorial + code)
+	Suppose we want to containerize simple web app created by python flask framework.
+	If we want to deploy application manually, we write steps in order.
+	creating image of web app:
+		1) start with OS like Ubuntu
+		2) then update source repositories using apt
+		3) then install dependencies using apt
+		4) then install python dependencies using PIP
+		5) then copy over the source code of your application to a location like "opt"
+		6) then run web server using flask command
+		
+	Now quick overview of process of creating your own image:
+		1) create docker file named as "docker file" then write down instructions for setting up your application in it
+			such as installing dependencies, where to copy the source code from and to and entry point of teh application.
+			
+				Dockerfile:															Meaning:
+				╔═══════════════════════════════════════════════════════════════╗
+				║ FROM Ubuntu                       	                        ║ -> What the base OS should be for container. All docker files must start from "FROM"
+				║ RUN apt-get update											║ -> To run particular command on those base images, here we are installing dependencies 
+				║ RUN apt-get install python                                    ║		using apt-get command to fetch the updated packages and install required dependencies.
+				║                                                               ║
+				║ RUN pip install flask                                         ║
+				║ RUN pip install flask-mysql                                   ║
+				║                                                               ║
+				║ COPY . /opt/source-code                                       ║ -> Copy instruction copies files from the local system onto docker image. here source code is
+				║                                                               ║		in our current directory and I will be copying source code "opt" inside docker image.
+				║ ENTRYPOINT FLASK_APP=/opt/source-code/app.py flask run        ║ -> Entry point allows us to specify the command that will be run when the image is 
+				╚═══════════════════════════════════════════════════════════════╝		run as a container.
+				
+				Docker file is a text file written in specific format that docker can understand.
+				It is an instruction and arguments format.
+				In this docker file we have everything in capital letter are instructions (left side) eg: RUN, COPY, FROM etc..
+					and on the right in small letters we have arguments to those instructions 
+				When docker build images, it builds these in layered architecture. Each line of instruction creates a new layer in the docker 
+					image with just the changes from the previous layer.
+						here first layer is a base Ubuntu OS
+						second layer update and install python
+						third layer with python packages 
+						fourth layer copies source code
+						final layer updates entry point of the image.
+			
+				All layers build are cached by docker. In case of particular step failure eg third layer failed, one can fix the issue by running docker build again
+				it will re-use the previous layers from cache and continue to rebuild broken layer.
+				Only layer above the updated layers needs to be rebuild.
+				For example: https://github.com/hamzasaeed2029/simple-webapp
+							 https://kodekloud.com/courses/docker-for-the-absolute-beginner-hands-on/lectures/4554709
+							 
+				After successful Dockerfile, you can run build as:
+					$ cd <to_that_dir> && docker build -t <tag_name> .
+					
+			::To check the info related to memory and layers:
+				$ docker history <image_name>
+					run docker history command as mentioned above
+			
+		2) Once done build your image using docker build command:
+				$ docker build Dockerfile -t hamzasaeed2029/my-custom-app
+					-t is tag name for image of docker file.
+					this will create image locally on your system/server
+		
+		3) To make this image available publically on docker hub:
+			first you have to login to docker hub from your server:
+				$docker login
+					then enter username and credentials and proceed to push command
+					
+				$ docker push hamzasaeed2029/my-custom-app
+					Use docker push command and specify the name if the image you just created
+					in this case, the name of the image is my account name which is hamzasaeed2029 followed by name of the image.
+					
+::Docker compose and links
+	$ docker-compose up
+	
+	::link two or more container:
+		$ docker run -d --name=test_app -p 500:80 --link <name of container you want to link with test_app>:<host name this app looking for> <image name> 
+			for example:
+						docker run -d --name=redis redis
+						docker run -d --name=db postgres
+						docker run -d --name=vote -p 5000:80 --link redis:redis voting-app
+						docker run -d --name=result -p 5001:80 --link db:db result-app
+						docker run -d --name=worker -p 500:80 --link redis:redis --link db:db worker 
+						 
+	After linking your cluster, you can make docker-compose.yml file. we start by creating a dictionary of container names. We will ise the same name
+	as we used for docker run command. so we take all the names and create a key with each of them. (eg redis,db,vote and result)
+	then under each item we specify which image to use. From above example our version 1 of docker compose file is like:
+
+	docker-compose.yml										Meaning:
+	╔══════════════════════════════════════════════════╗
+	║ redis:                       	  		   		   ║ -> key name
+	║ 	image:	redis			      	    		   ║
+	║ db:                             		  		   ║ -> key name
+	║	image:	postgres:9.4          		   		   ║
+	║ vote:                           		   		   ║ -> key name
+	║ 	image:	voting-app              	   		   ║ -> replace the image online with wuild line and specify location of directory that contains 
+	║ 	                                           	   ║         the app code and docker file with instructions to build image. eg: build: ./vote
+	║ 					           					   ║ 		
+	║   ports:                       		   		   ║ -> create property called ports and list all the ports that you like to publish under that.
+	║		- 5000:80                 	   			   ║    
+	║	links:                        		   		   ║ -> create property called links and provide array of links such as redis. 
+	║		- redis                   	   			   ║		Note that db:db is similar to just specifying db.
+	║ result:                         		   		   ║ -> key name
+	║ 	image: result-app             		   		   ║
+	║ 	ports:                        		   		   ║ -> create property called ports and list all the ports that you like to publish under that.
+	║		- 5000:80                          		   ║ 		
+	║	links:                        		   		   ║ -> create property called links and provide array of links such as redis and db
+	║		- redis                   	   			   ║
+	║		- db                               		   ║
+	║ worker:                                          ║
+	║	image:	worker                             	   ║
+	║	links:                                     	   ║ -> create property called links and provide array of links such as redis and db. 
+	║		- db                               		   ║		
+	║		- redis                            		   ║
+	╚══════════════════════════════════════════════════╝
+	
+	and the version 2 of the docker compose file is like:
+	docker-compose.yml										
+	╔══════════════════════════════════════════════════╗	
+	║  version: 2                                      ║ -> version 2 automatically creates dedicated bridge network for this application and then attaches all containers
+	║  services:                                       ║		to that new network. All containers are then able to communicate to each other's service name.
+	║		redis:                       	   		   ║		in short you don't need links in version 2.
+	║			image:	redis		   				   ║	
+	║		db:                                		   ║	
+	║			image:	postgres:9.4       			   ║	We can add depends on property to the voting application and indicate that it is dependent on redis.
+	║		vote:                              		   ║	
+	║			image:	voting-app         			   ║	
+	║		  	ports:                     			   ║	
+	║				- 5000:80          				   ║
+	║			depends_on:                			   ║
+	║				- redis            				   ║
+	║		result:                            		   ║	
+	║			image: result-app          			   ║	
+	║			ports:                     			   ║	
+	║				- 5000:80          				   ║	
+	║		worker:                            		   ║	
+	║			image:	worker             			   ║	
+	╚══════════════════════════════════════════════════╝	
+	
+	$ docker-compose up
+		to bring up the entire application stack that is configured in yml file in that directory.
+		The name of the project will be the directory where compose file is placed.
+		
+::Docker remote cli:
+	$ docker -H=remote_docker_engine:<port>
+	
+		::To run commands on remote docker host:
+			$ docker -H=192.168.0.128:2376 run apache2
+	
+:: Docker resource allocation:
+	$ docker run --cpus=<value less than 1> <image>
+	$ docker run --memory=<value> <image>
+	
+		By default there is no restriction on how much resources a container can use.
+		for example: 
+			$ docker run --spus=.5 ubuntu
+				it is to limit as the container do not take more than 50% of host CPU
+			$ docker run --memory=100m ubuntu
+				it is to limit memory as the container can not take more than 100MB.
+	
+::Docker file system:
+	by default the ddocker stores data (files related to images and containers) as: 
+	   
+	   📁 /var/lib/docker
+	   ╚═ 📁 aufs
+	   ╚═ 📁 containers 
+	   ╚═ 📁 image
+	   ╚═ 📁 volumes
+	
+:: Docker storage drivers:
+	docker uses storage drivers for the layerd architecture that are responsible for:
+		• maintaining layerd architecture
+		• moving files across layers
+		• enable copy and write 
+	Some of the commong storage drivers are as follows:
+		• AUFS
+		• ZFS
+		• BTRFS
+		• Device Mapper
+		• Overlay
+		• Overlay2
+		
+	For more details please check the references.
+	
+:: Docker network bridge:
+	Note: the internal DNS server always runs on 127.0.0.11.
+	
+	:: To attach container to a network:
+		$ docker run --network=<network_name> <image_name>
+
+	::To create custom internal network:
+		$ docker network create --driver bridge  --subnet 182.18.0.0/16 <network_name>
+
+	::To view the network
+	$ docker network ls
+
+	$ docker inspect <container id/name>
+		to view the type of network the container is attached to its internal IP address and other settings.
+
+:: Docker container orchestration:
+	:: Docker swarm:
+		$ docker swarm init --advertise-adr 192.168.0.128
+				↓
+		by running above command the swarm is initialized
+				↓
+		Then by docker will suggest a command on runtime as:
+			$ docker swarm join --token..... 	
+				↓
+		Then after joining swarm, the workers are also reffered to as nodes and we are ready to create services and deploy on swarm cluster.
+
+		NOTE: Docker service command (such as run, create etc.) run on the manager node and not on a worker node. 
+		      Docker service is the instance of a single application or service that runs acress the site.
+
+	:: Kubernetes
+                                    |
+		$ docker run my-web-server	|		$ kubectl scale --replicas=2000 my-web-server
+		                            |       $ kubectl run --replicas=1000 my-web-server
+									|  ╔════════════════════════════════════════════════════════════════════╗
+		                            |  ║              														║ 
+		    ╔════════════════════╗  |  ║     ╔══════════════════╦════════════════╦════════════════╗         ║
+		    ║    				 ║  |  ║     ║                  ║    	         ║                ║         ║
+		    ║    				 ║  |  ║     ║                  ║   		     ║                ║         ║
+		    ║    Docker Host     ║  |  ║     ║     Node	        ║  	  Node       ║ 	   Node       ║         ║
+		    ╚════════════════════╝  |  ║     ║                  ║  	             ║                ║         ║
+		        					|  ║     ╚══════════════════╩════════════════╩════════════════╝         ║
+		                            |  ║              	  													║
+		                            |  ║              			Kubernetes Cluster				 			║
+		                            |  ╚════════════════════════════════════════════════════════════════════╝
+		                            |
+		Kubernetes can scale up and down based on user load.
+		Here kubernetes can upgrade these two thousand instances of the application in a rolling upgrade fashion one at a time with a single command.
+			$ kubectl rolling-update my-web-server --image=webserver:2
+		If something goes wrong, it can roll back these images with a single command.
+			$ kubectl rolling-update my-web-server --rollback
+			
+		:: Relation between Kubernetes and docker:
+			Kubernetes uses docker host to host applications in the form of containers.
+			kubernetes doesn't always relies on docker, it can support cryo and rocket as well.
+			
+		::Kubernetes cluster info:
+			$ kubectl cluster-info
+			
+		::Deploy application on cluster Kubernetes:
+			$ kubectl run hello-minikube
+			
+		::To list nodes that are part of cluster in kubernetes:
+			$ kubectl get nodes 
+									
+References: 
+	https://docs.docker.com/storage/
+	https://docs.docker.com/storage/storagedriver/
+	https://docs.docker.com/engine/install/ubuntu/
+	https://www.youtube.com/watch?v=fqMOX6JJhGo
+	https://kodekloud.com/courses/296044/lectures/13600549
+	https://docs.docker.com/get-started/kube-deploy/
