@@ -156,7 +156,7 @@ Commands:
 				Dockerfile:															Meaning:
 				╔═══════════════════════════════════════════════════════════════╗
 				║ FROM Ubuntu                       	                        ║ -> What the base OS should be for container. All docker files must start from "FROM"
-				║ RUN apt-get update											║ -> To run particular command on those base images, here we are installing dependencies 
+				║ RUN apt-get update						║ -> To run particular command on those base images, here we are installing dependencies 
 				║ RUN apt-get install python                                    ║		using apt-get command to fetch the updated packages and install required dependencies.
 				║                                                               ║
 				║ RUN pip install flask                                         ║
@@ -224,30 +224,30 @@ Commands:
 
 	docker-compose.yml										Meaning:
 	╔══════════════════════════════════════════════════╗
-	║ redis:                       	  		   		   ║ -> key name
-	║ 	image:	redis			      	    		   ║
-	║ db:                             		  		   ║ -> key name
-	║	image:	postgres:9.4          		   		   ║
-	║ vote:                           		   		   ║ -> key name
-	║ 	image:	voting-app              	   		   ║ -> replace the image online with wuild line and specify location of directory that contains 
-	║ 	                                           	   ║         the app code and docker file with instructions to build image. eg: build: ./vote
-	║ 					           					   ║ 		
-	║   ports:                       		   		   ║ -> create property called ports and list all the ports that you like to publish under that.
-	║		- 5000:80                 	   			   ║    
-	║	links:                        		   		   ║ -> create property called links and provide array of links such as redis. 
-	║		- redis                   	   			   ║		Note that db:db is similar to just specifying db.
-	║ result:                         		   		   ║ -> key name
-	║ 	image: result-app             		   		   ║
-	║ 	ports:                        		   		   ║ -> create property called ports and list all the ports that you like to publish under that.
-	║		- 5000:80                          		   ║ 		
-	║	links:                        		   		   ║ -> create property called links and provide array of links such as redis and db
-	║		- redis                   	   			   ║
-	║		- db                               		   ║
+	║ redis:                       	  		   ║ -> key name
+	║ 	image:	redis			      	   ║
+	║ db:                             		   ║ -> key name
+	║	image:	postgres:9.4          		   ║
+	║ vote:                           		   ║ -> key name
+	║ 	image:	voting-app              	   ║ -> replace the image online with wuild line and specify location of directory that contains 
+	║ 	                                           ║         the app code and docker file with instructions to build image. eg: build: ./vote
+	║ 					           ║ 		
+	║   ports:                       		   ║ -> create property called ports and list all the ports that you like to publish under that.
+	║		- 5000:80                 	   ║    
+	║	links:                        		   ║ -> create property called links and provide array of links such as redis. 
+	║		- redis                   	   ║		Note that db:db is similar to just specifying db.
+	║ result:                         		   ║ -> key name
+	║ 	image: result-app             		   ║
+	║ 	ports:                        		   ║ -> create property called ports and list all the ports that you like to publish under that.
+	║		- 5000:80                          ║ 		
+	║	links:                        		   ║ -> create property called links and provide array of links such as redis and db
+	║		- redis                   	   ║
+	║		- db                               ║
 	║ worker:                                          ║
-	║	image:	worker                             	   ║
-	║	links:                                     	   ║ -> create property called links and provide array of links such as redis and db. 
-	║		- db                               		   ║		
-	║		- redis                            		   ║
+	║	image:	worker                             ║
+	║	links:                                     ║ -> create property called links and provide array of links such as redis and db. 
+	║		- db                               ║		
+	║		- redis                            ║
 	╚══════════════════════════════════════════════════╝
 	
 	and the version 2 of the docker compose file is like:
@@ -255,22 +255,22 @@ Commands:
 	╔══════════════════════════════════════════════════╗	
 	║  version: 2                                      ║ -> version 2 automatically creates dedicated bridge network for this application and then attaches all containers
 	║  services:                                       ║		to that new network. All containers are then able to communicate to each other's service name.
-	║		redis:                       	   		   ║		in short you don't need links in version 2.
-	║			image:	redis		   				   ║	
-	║		db:                                		   ║	
-	║			image:	postgres:9.4       			   ║	We can add depends on property to the voting application and indicate that it is dependent on redis.
-	║		vote:                              		   ║	
-	║			image:	voting-app         			   ║	
-	║		  	ports:                     			   ║	
-	║				- 5000:80          				   ║
-	║			depends_on:                			   ║
-	║				- redis            				   ║
-	║		result:                            		   ║	
-	║			image: result-app          			   ║	
-	║			ports:                     			   ║	
-	║				- 5000:80          				   ║	
-	║		worker:                            		   ║	
-	║			image:	worker             			   ║	
+	║		redis:                       	   ║		in short you don't need links in version 2.
+	║			image:	redis		   ║	
+	║		db:                                ║	
+	║			image:	postgres:9.4       ║	We can add depends on property to the voting application and indicate that it is dependent on redis.
+	║		vote:                              ║	
+	║			image:	voting-app         ║	
+	║		  	ports:                     ║	
+	║				- 5000:80          ║
+	║			depends_on:                ║
+	║				- redis            ║
+	║		result:                            ║	
+	║			image: result-app          ║	
+	║			ports:                     ║	
+	║				- 5000:80          ║	
+	║		worker:                            ║	
+	║			image:	worker             ║	
 	╚══════════════════════════════════════════════════╝	
 	
 	$ docker-compose up
@@ -348,19 +348,19 @@ Commands:
 		      Docker service is the instance of a single application or service that runs acress the site.
 
 	:: Kubernetes
-                                    |
-		$ docker run my-web-server	|		$ kubectl scale --replicas=2000 my-web-server
+                                            |
+		$ docker run my-web-server  |		$ kubectl scale --replicas=2000 my-web-server
 		                            |       $ kubectl run --replicas=1000 my-web-server
-									|  ╔════════════════════════════════════════════════════════════════════╗
-		                            |  ║              														║ 
+					    |  ╔════════════════════════════════════════════════════════════════════╗
+		                            |  ║              							    ║ 
 		    ╔════════════════════╗  |  ║     ╔══════════════════╦════════════════╦════════════════╗         ║
-		    ║    				 ║  |  ║     ║                  ║    	         ║                ║         ║
-		    ║    				 ║  |  ║     ║                  ║   		     ║                ║         ║
-		    ║    Docker Host     ║  |  ║     ║     Node	        ║  	  Node       ║ 	   Node       ║         ║
-		    ╚════════════════════╝  |  ║     ║                  ║  	             ║                ║         ║
-		        					|  ║     ╚══════════════════╩════════════════╩════════════════╝         ║
-		                            |  ║              	  													║
-		                            |  ║              			Kubernetes Cluster				 			║
+		    ║    		 ║  |  ║     ║                  ║    	         ║                ║         ║
+		    ║    		 ║  |  ║     ║                  ║       	 ║                ║         ║
+		    ║    Docker Host     ║  |  ║     ║     Node	        ║  	  Node   ║ 	   Node   ║         ║
+		    ╚════════════════════╝  |  ║     ║                  ║  	         ║                ║         ║
+		        		    |  ║     ╚══════════════════╩════════════════╩════════════════╝         ║
+		                            |  ║              	   						    ║
+		                            |  ║              			Kubernetes Cluster	            ║
 		                            |  ╚════════════════════════════════════════════════════════════════════╝
 		                            |
 		Kubernetes can scale up and down based on user load.
