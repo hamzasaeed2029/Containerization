@@ -90,8 +90,8 @@ Commands:
 			$ docker volume create data_volume
 				after running this command, it will create a folder as:
 				 📁 /var/lib/docker
-	             ╚══ 📁 volumes
-					 ╚══ 📁 data_volume
+	                          ╚══ 📁 volumes
+				       ╚══ 📁 data_volume
 					 
 				Then mount the volume inside the container read/write layer as:
 					$ docker run -v data_volume:/var/lib/mysql mysql
